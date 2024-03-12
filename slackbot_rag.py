@@ -1,8 +1,8 @@
 SLACK_BOT_TOKEN = ""
 SLACK_APP_TOKEN = ""
 
-API_ENDPOINT = ""
 AZURE_ENDPOINT = ""
+API_VERSION = ""
 API_KEY = ""
 
 import os
