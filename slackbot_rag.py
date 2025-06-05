@@ -50,8 +50,8 @@ def handle_message_events(body, logger):
 
     documents = SimpleDirectoryReader('data').load_data()
     index = VectorStoreIndex.from_documents(documents)
-
-
+    
+    query_engine = index.as_query_engine()
     response = query_engine.query(prompt)
 
     response = client.chat_postMessage(channel=body["event"]["channel"],
