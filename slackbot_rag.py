@@ -22,42 +22,49 @@ client = WebClient(SLACK_BOT_TOKEN)
 
 @app.event("app_mention")
 def handle_message_events(body, logger):
-    print(str(body["event"]["text"]).split(">")[1])
-
-    prompt = str(body["event"]["text"]).split(">")[1]
-
-    response = client.chat_postMessage(channel=body["event"]["channel"],
-                                       thread_ts=body["event"]["event_ts"],
-                                       text=f"Hello from your ScoutBot! :robot_face: \nThanks for your request, I will try to answer it as soon as possible!")
-
-    llm = AzureOpenAI(
-    model="gpt-35-turbo",
-    deployment_name="demo-ai",
-    api_key=API_KEY,
-    azure_endpoint=AZURE_ENDPOINT,
-    api_version=API_VERSION)
-
-
-    embed_model = AzureOpenAIEmbedding(
-    model="text-embedding-ada-002",
-    deployment_name="SlackEmbedding",
-    api_key=API_KEY,
-    azure_endpoint=AZURE_ENDPOINT,
-    api_version=API_VERSION)
-
-    Settings.llm = llm
-    Settings.embed_model = embed_model
-
-    documents = SimpleDirectoryReader('data').load_data()
-    index = VectorStoreIndex.from_documents(documents)
+    try:
+        print(str(body["event"]["text"]).split(">")[1])
     
-    query_engine = index.as_query_engine()
-    response = query_engine.query(prompt)
-
-    response = client.chat_postMessage(channel=body["event"]["channel"],
-                                       thread_ts=body["event"]["event_ts"],
-                                       text=f"Here you go: \n{response}")
-
+        prompt = str(body["event"]["text"]).split(">")[1]
+    
+        response = client.chat_postMessage(channel=body["event"]["channel"],
+                                           thread_ts=body["event"]["event_ts"],
+                                           text=f"Hello from your ScoutBot! :robot_face: \nThanks for your request, I will try to answer it as soon as possible!")
+    
+        llm = AzureOpenAI(
+        model="gpt-35-turbo",
+        deployment_name="demo-ai",
+        api_key=API_KEY,
+        azure_endpoint=AZURE_ENDPOINT,
+        api_version=API_VERSION)
+    
+    
+        embed_model = AzureOpenAIEmbedding(
+        model="text-embedding-ada-002",
+        deployment_name="SlackEmbedding",
+        api_key=API_KEY,
+        azure_endpoint=AZURE_ENDPOINT,
+        api_version=API_VERSION)
+    
+        Settings.llm = llm
+        Settings.embed_model = embed_model
+    
+        documents = SimpleDirectoryReader('data').load_data()
+        index = VectorStoreIndex.from_documents(documents)
+        
+        query_engine = index.as_query_engine()
+        response = query_engine.query(prompt)
+    
+        response = client.chat_postMessage(channel=body["event"]["channel"],
+                                           thread_ts=body["event"]["event_ts"],
+                                           text=f"Here you go: \n{response}")
+    except Exception as e:
+        logger.error(f"Error handling message: {e}")
+        client.chat_postMessage(
+            channel=body["event"]["channel"],
+            thread_ts=body["event"]["event_ts"],
+            text="Oops! Something went wrong while processing your request."
+        )
 
 if __name__ == "__main__":
     SocketModeHandler(app, SLACK_APP_TOKEN).start()
